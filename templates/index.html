@@ -17,6 +17,94 @@
             margin: 0 auto;
             padding: 20px;
         }
+        
+        /* Mobile-first responsive design */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 15px;
+                margin: 0 auto;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+            
+            .prediction-card {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .btn-predict {
+                padding: 15px 20px;
+                font-size: 14px;
+                margin-top: 10px;
+            }
+            
+            .stock-info, .prediction-result {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .stock-info h4, .prediction-result h4 {
+                font-size: 1.2rem;
+                margin-bottom: 15px;
+            }
+            
+            .col-md-4, .col-md-6 {
+                margin-bottom: 15px;
+            }
+            
+            .sentiment-info {
+                padding: 12px;
+                margin-top: 12px;
+            }
+            
+            .sentiment-explanation {
+                padding: 12px;
+                margin-top: 15px;
+            }
+            
+            .sentiment-details {
+                font-size: 0.85rem;
+            }
+            
+            .chart-container {
+                padding: 15px;
+                margin-top: 15px;
+            }
+            
+            .feature-list {
+                padding: 12px;
+                margin-top: 12px;
+            }
+            
+            .feature-list li {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Tablet responsive design */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .main-container {
+                padding: 18px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .prediction-card {
+                padding: 25px;
+            }
+            
+            .stock-info, .prediction-result {
+                padding: 18px;
+            }
+        }
         .header {
             text-align: center;
             color: white;
@@ -49,6 +137,16 @@
             border: 2px solid #e0e0e0;
             transition: all 0.3s ease;
         }
+        
+        /* Prevent zoom on mobile input focus */
+        @media (max-width: 768px) {
+            .form-control {
+                font-size: 16px; /* Prevents zoom on iOS */
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+            }
+        }
         .form-control:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
@@ -67,6 +165,36 @@
         .btn-predict:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Touch-friendly mobile interactions */
+        @media (max-width: 768px) {
+            .btn-predict:hover {
+                transform: none; /* Disable hover effects on mobile */
+                box-shadow: none;
+            }
+            
+            .btn-predict:active {
+                transform: scale(0.98);
+                transition: transform 0.1s ease;
+            }
+            
+            /* Improve touch targets */
+            .btn-predict {
+                min-height: 48px; /* Minimum touch target size */
+                touch-action: manipulation;
+            }
+            
+            .form-control {
+                min-height: 48px;
+                touch-action: manipulation;
+            }
+            
+            /* Better spacing for touch */
+            .sentiment-value {
+                padding: 8px 12px;
+                margin: 4px 0;
+            }
         }
         .result-section {
             margin-top: 30px;
