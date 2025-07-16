@@ -606,14 +606,18 @@
                                     
                                     // Add custom touch-to-hover functionality
                                     let touchTimer;
+                                    let hoverTimer;
+                                    let isHoverActive = false;
+                                    
                                     chartElement.addEventListener('touchstart', function(e) {
                                         const touch = e.touches[0];
                                         const rect = chartElement.getBoundingClientRect();
                                         const x = touch.clientX - rect.left;
                                         const y = touch.clientY - rect.top;
                                         
-                                        // Clear any existing timer
+                                        // Clear any existing timers
                                         clearTimeout(touchTimer);
+                                        clearTimeout(hoverTimer);
                                         
                                         // Set a timer to trigger hover after a short delay
                                         touchTimer = setTimeout(() => {
@@ -626,15 +630,50 @@
                                             
                                             // Trigger hover event
                                             Plotly.Fx.hover('chart', hoverData);
+                                            isHoverActive = true;
                                         }, 100);
+                                    });
+                                    
+                                    chartElement.addEventListener('touchmove', function(e) {
+                                        if (isHoverActive) {
+                                            const touch = e.touches[0];
+                                            const rect = chartElement.getBoundingClientRect();
+                                            const x = touch.clientX - rect.left;
+                                            const y = touch.clientY - rect.top;
+                                            
+                                            // Update hover position as finger moves
+                                            const hoverData = {
+                                                points: [],
+                                                xvals: [x],
+                                                yvals: [y]
+                                            };
+                                            
+                                            Plotly.Fx.hover('chart', hoverData);
+                                        }
                                     });
                                     
                                     chartElement.addEventListener('touchend', function(e) {
                                         clearTimeout(touchTimer);
-                                        // Clear hover after touch ends
-                                        setTimeout(() => {
-                                            Plotly.Fx.unhover('chart');
-                                        }, 1000);
+                                        
+                                        // Keep hover visible for 5 seconds after touch ends
+                                        if (isHoverActive) {
+                                            hoverTimer = setTimeout(() => {
+                                                Plotly.Fx.unhover('chart');
+                                                isHoverActive = false;
+                                            }, 5000); // 5 seconds instead of 1 second
+                                        }
+                                    });
+                                    
+                                    // Clear hover when tapping elsewhere on the chart
+                                    chartElement.addEventListener('touchstart', function(e) {
+                                        if (isHoverActive) {
+                                            // If user taps elsewhere, clear the hover immediately
+                                            clearTimeout(hoverTimer);
+                                            hoverTimer = setTimeout(() => {
+                                                Plotly.Fx.unhover('chart');
+                                                isHoverActive = false;
+                                            }, 100);
+                                        }
                                     });
                                 }
                                 
