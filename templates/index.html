@@ -194,15 +194,32 @@
             $('#stockForm').submit(function(event) {
                 event.preventDefault();
                 const ticker = $('#ticker').val().trim();
-                $('#result').html('');
-                $.post('/predict', {ticker: ticker}, function(data) {
+                
+                if (!ticker) {
+                    $('#result').html('<p class="error">Please enter a stock ticker symbol</p>');
+                    return;
+                }
+                
+                // Show loading indicator
+                $('#result').html(`
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Analyzing ${ticker.toUpperCase()} stock data and generating 2-year predictions...</p>
+                        <p><small>This may take a moment as we train the AI model with historical data.</small></p>
+                    </div>
+                `);
+                
+                // Disable the submit button
+                $('#stockForm button').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Analyzing...');
+                
+                $.post('/predict', {ticker: ticker})
+                .done(function(data) {
                     if (data.error) {
-                        $('#result').html(`<p class="error">${data.error}</p>`);
+                        $('#result').html(`<p class="error"><i class="fas fa-exclamation-circle"></i> ${data.error}</p>`);
                     } else {
                         const prediction = data.prediction;
                         const stockInfo = data.stock_info;
-                        const chartData = JSON.parse(data.chart_data);
-
+                        
                         let marketCap = stockInfo.market_cap;
                         if (typeof marketCap === 'number') {
                             marketCap = marketCap.toLocaleString();
@@ -250,11 +267,34 @@
 
                         $('#result').html(resultHtml);
 
-                        const plotlyOptions = {
-                            displayModeBar: false,
-                        };
-                        Plotly.newPlot('chart', chartData.data, chartData.layout, plotlyOptions);
+                        // Plot chart if data exists
+                        if (data.chart_data) {
+                            try {
+                                const chartData = JSON.parse(data.chart_data);
+                                const plotlyOptions = {
+                                    displayModeBar: false,
+                                };
+                                Plotly.newPlot('chart', chartData.data, chartData.layout, plotlyOptions);
+                            } catch (e) {
+                                console.error('Error plotting chart:', e);
+                                $('#chart').html('<p class="error">Error loading chart visualization</p>');
+                            }
+                        }
                     }
+                })
+                .fail(function(xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    $('#result').html(`
+                        <p class="error">
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            Network error occurred. Please check your connection and try again.
+                            <br><small>Error: ${error}</small>
+                        </p>
+                    `);
+                })
+                .always(function() {
+                    // Re-enable the submit button
+                    $('#stockForm button').prop('disabled', false).html('<i class="fas fa-magic"></i> Predict');
                 });
             });
         });

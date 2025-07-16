@@ -17,24 +17,29 @@ def index():
 def predict():
     try:
         ticker = request.form.get('ticker', '').upper().strip()
+        print(f"Processing request for ticker: {ticker}")
         
         if not ticker:
             return jsonify({'error': 'Please enter a stock ticker symbol'})
         
         # Create predictor instance
         predictor = StockPredictor(ticker)
+        print(f"Created predictor for {ticker}")
         
         # Get prediction
         prediction_result = predictor.predict_future_prices()
+        print(f"Prediction result: {prediction_result is not None}")
         
         if prediction_result is None:
-            return jsonify({'error': f'Unable to fetch data for ticker: {ticker}'})
+            return jsonify({'error': f'Unable to fetch data for ticker: {ticker}. Please check if the ticker symbol is correct.'})
         
         # Get stock info
         stock_info = predictor.get_stock_info()
+        print(f"Stock info obtained: {stock_info}")
         
         # Get chart data with future predictions
         chart_data = get_stock_chart_data(ticker, prediction_result)
+        print(f"Chart data created: {chart_data is not None}")
         
         return jsonify({
             'success': True,
@@ -44,6 +49,9 @@ def predict():
         })
         
     except Exception as e:
+        print(f"Error in predict route: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'An error occurred: {str(e)}'})
 
 def get_stock_chart_data(ticker, prediction_result):
