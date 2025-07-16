@@ -561,10 +561,82 @@
                                     scrollZoom: false,
                                     doubleClick: false,
                                     showTips: true,
-                                    displaylogo: false
+                                    displaylogo: false,
+                                    // Mobile-specific touch configurations
+                                    touchAction: 'pan-y',
+                                    dragmode: isMobile ? false : 'zoom',
+                                    showAxisDragHandles: false,
+                                    showAxisRangeEntryBoxes: false
                                 };
                                 
+                                // Enhanced mobile configuration
+                                if (isMobile) {
+                                    chartData.layout.dragmode = false;
+                                    chartData.layout.selectdirection = 'diagonal';
+                                    chartData.layout.hovermode = 'x unified';
+                                    chartData.layout.hoverlabel = {
+                                        bgcolor: 'rgba(0,0,0,0.8)',
+                                        font: { size: 12, color: 'white' },
+                                        bordercolor: 'white'
+                                    };
+                                    chartData.layout.xaxis.fixedrange = true;
+                                    chartData.layout.yaxis.fixedrange = true;
+                                } else {
+                                    chartData.layout.hovermode = 'x unified';
+                                }
+                                
                                 Plotly.newPlot('chart', chartData.data, chartData.layout, plotlyOptions);
+                                
+                                // Add touch event handlers for mobile
+                                if (isMobile) {
+                                    const chartElement = document.getElementById('chart');
+                                    
+                                    // Prevent default touch behaviors that cause glitches
+                                    chartElement.addEventListener('touchstart', function(e) {
+                                        e.preventDefault();
+                                    }, { passive: false });
+                                    
+                                    chartElement.addEventListener('touchmove', function(e) {
+                                        e.preventDefault();
+                                    }, { passive: false });
+                                    
+                                    chartElement.addEventListener('touchend', function(e) {
+                                        e.preventDefault();
+                                    }, { passive: false });
+                                    
+                                    // Add custom touch-to-hover functionality
+                                    let touchTimer;
+                                    chartElement.addEventListener('touchstart', function(e) {
+                                        const touch = e.touches[0];
+                                        const rect = chartElement.getBoundingClientRect();
+                                        const x = touch.clientX - rect.left;
+                                        const y = touch.clientY - rect.top;
+                                        
+                                        // Clear any existing timer
+                                        clearTimeout(touchTimer);
+                                        
+                                        // Set a timer to trigger hover after a short delay
+                                        touchTimer = setTimeout(() => {
+                                            // Simulate hover event
+                                            const hoverData = {
+                                                points: [],
+                                                xvals: [x],
+                                                yvals: [y]
+                                            };
+                                            
+                                            // Trigger hover event
+                                            Plotly.Fx.hover('chart', hoverData);
+                                        }, 100);
+                                    });
+                                    
+                                    chartElement.addEventListener('touchend', function(e) {
+                                        clearTimeout(touchTimer);
+                                        // Clear hover after touch ends
+                                        setTimeout(() => {
+                                            Plotly.Fx.unhover('chart');
+                                        }, 1000);
+                                    });
+                                }
                                 
                                 // Make chart responsive to window resize
                                 window.addEventListener('resize', function() {
