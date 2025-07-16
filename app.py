@@ -37,6 +37,10 @@ def predict():
         stock_info = predictor.get_stock_info()
         print(f"Stock info obtained: {stock_info}")
         
+        # Get Reddit sentiment
+        reddit_sentiment = predictor.get_reddit_sentiment(ticker)
+        print(f"Reddit sentiment: {reddit_sentiment}")
+        
         # Get chart data with future predictions
         chart_data = get_stock_chart_data(ticker, prediction_result)
         print(f"Chart data created: {chart_data is not None}")
@@ -45,6 +49,7 @@ def predict():
             'success': True,
             'prediction': prediction_result,
             'stock_info': stock_info,
+            'reddit_sentiment': reddit_sentiment,
             'chart_data': chart_data
         })
         

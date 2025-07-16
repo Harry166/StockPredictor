@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 import yfinance as yf
+import praw
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import pickle
 import os
 from datetime import datetime, timedelta
@@ -83,10 +85,18 @@ class StockPredictor:
         if df is None or df.empty:
             return False
         
+        # Get Reddit sentiment (using current sentiment for all historical data)
+        print(f"Fetching Reddit sentiment for {self.ticker}...")
+        reddit_sentiment = self.get_reddit_sentiment(self.ticker)
+        print(f"Reddit sentiment: {reddit_sentiment}")
+        
+        # Add Reddit sentiment as a feature
+        df['Reddit_Sentiment'] = reddit_sentiment
+        
         # Select features
         feature_columns = ['Close', 'Volume', 'MA_5', 'MA_10', 'MA_20', 
                           'Price_Change', 'Volume_Change', 'Volatility', 
-                          'HL_Ratio', 'Price_Position', 'Volume_Price_Trend']
+                          'HL_Ratio', 'Price_Position', 'Volume_Price_Trend', 'Reddit_Sentiment']
         
         X = df[feature_columns]
         y = df['Target']
@@ -141,6 +151,11 @@ class StockPredictor:
         current_price = df['Close'].iloc[-1]
         historical_volatility = df['Close'].pct_change().std()
         
+        # Get current Reddit sentiment
+        print(f"Fetching current Reddit sentiment for {self.ticker}...")
+        current_reddit_sentiment = self.get_reddit_sentiment(self.ticker)
+        print(f"Current Reddit sentiment: {current_reddit_sentiment}")
+        
         # Generate future predictions with proper feature updating
         future_predictions = []
         future_dates = []
@@ -172,7 +187,7 @@ class StockPredictor:
             price_position = 0.5  # Assume middle position
             volume_price_trend = last_volume * price_change
             
-            # Create feature array
+            # Create feature array (including Reddit sentiment)
             features = np.array([
                 last_close,
                 last_volume,
@@ -184,7 +199,8 @@ class StockPredictor:
                 volatility,
                 hl_ratio,
                 price_position,
-                volume_price_trend
+                volume_price_trend,
+                current_reddit_sentiment
             ])
             
             # Predict next price
@@ -246,6 +262,58 @@ class StockPredictor:
                 'industry': 'N/A',
                 'market_cap': 'N/A'
             }
+
+    def get_reddit_sentiment(self, ticker):
+        """Fetch sentiment from Reddit for the given stock ticker"""
+        try:
+            reddit = praw.Reddit(
+                client_id='U6lPM9dMzztYpJI6eEJeWg',
+                client_secret='9vFC1M-zXLBS-NyjmNfembvGxShLvw',
+                user_agent='StockPredictorApp'
+            )
+
+            analyzer = SentimentIntensityAnalyzer()
+            sentiment_scores = []
+            
+            # List of relevant subreddits for stock discussion
+            subreddits = ['stocks', 'investing', 'SecurityAnalysis', 'StockMarket', 'wallstreetbets']
+            
+            for subreddit_name in subreddits:
+                try:
+                    subreddit = reddit.subreddit(subreddit_name)
+                    
+                    # Search for posts about the ticker
+                    for submission in subreddit.search(ticker, limit=20, time_filter='day'):
+                        # Check if post is recent (within 7 days)
+                        if datetime.utcnow() - datetime.utcfromtimestamp(submission.created_utc) < timedelta(days=7):
+                            # Analyze title and content
+                            text = submission.title + " " + (submission.selftext if submission.selftext else "")
+                            sentiment = analyzer.polarity_scores(text)
+                            sentiment_scores.append(sentiment['compound'])
+                            
+                            # Also analyze top comments
+                            submission.comments.replace_more(limit=0)
+                            for comment in submission.comments[:5]:  # Top 5 comments
+                                if hasattr(comment, 'body') and len(comment.body) > 10:
+                                    comment_sentiment = analyzer.polarity_scores(comment.body)
+                                    sentiment_scores.append(comment_sentiment['compound'])
+                                    
+                except Exception as e:
+                    print(f"Error accessing subreddit {subreddit_name}: {e}")
+                    continue
+            
+            # Return average sentiment or 0 if no data found
+            if sentiment_scores:
+                avg_sentiment = np.mean(sentiment_scores)
+                print(f"Found {len(sentiment_scores)} sentiment data points")
+                return avg_sentiment
+            else:
+                print("No recent Reddit posts found for this ticker")
+                return 0
+                
+        except Exception as e:
+            print(f"Error fetching Reddit sentiment: {e}")
+            return 0
 
 # Example usage and testing
 if __name__ == "__main__":

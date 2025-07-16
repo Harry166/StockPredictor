@@ -154,6 +154,72 @@
             color: #444;
             font-weight: 500;
         }
+        .sentiment-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        .sentiment-score {
+            margin: 10px 0;
+        }
+        .sentiment-label {
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .sentiment-value {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+        .sentiment-value.positive {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+        .sentiment-value.negative {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+        .sentiment-value.neutral {
+            background: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
+        }
+        .sentiment-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-style: italic;
+        }
+        .sentiment-explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .sentiment-explanation h6 {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        .sentiment-details {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .sentiment-details p {
+            margin: 8px 0;
+        }
+        .sentiment-details ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .sentiment-details li {
+            margin: 8px 0;
+            list-style-type: disc;
+        }
+        .sentiment-details em {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
@@ -177,6 +243,7 @@
                 <ul>
                     <li>Real-time stock data from Yahoo Finance</li>
                     <li>Advanced technical indicators (Moving Averages, Volatility, etc.)</li>
+                    <li>Reddit sentiment analysis from multiple subreddits</li>
                     <li>Random Forest Machine Learning model</li>
                     <li>2-year future price predictions with accuracy metrics</li>
                 </ul>
@@ -219,6 +286,7 @@
                     } else {
                         const prediction = data.prediction;
                         const stockInfo = data.stock_info;
+                        const redditSentiment = data.reddit_sentiment;
                         
                         let marketCap = stockInfo.market_cap;
                         if (typeof marketCap === 'number') {
@@ -257,6 +325,34 @@
                                 </div>
                                 <div class="accuracy-badge">
                                     <i class="fas fa-bullseye"></i> Model Accuracy: ${prediction.accuracy}%
+                                </div>
+                                
+                                <div class="sentiment-info">
+                                    <h5><i class="fab fa-reddit"></i> Reddit Sentiment Analysis</h5>
+                                    <div class="sentiment-score">
+                                        <span class="sentiment-label">Overall Sentiment:</span>
+                                        <span class="sentiment-value ${redditSentiment >= 0.1 ? 'positive' : redditSentiment <= -0.1 ? 'negative' : 'neutral'}">
+                                            ${redditSentiment >= 0.1 ? 'Positive' : redditSentiment <= -0.1 ? 'Negative' : 'Neutral'} 
+                                            (${redditSentiment.toFixed(3)})
+                                        </span>
+                                    </div>
+                                    <small class="sentiment-description">
+                                        Based on recent posts from r/stocks, r/investing, r/wallstreetbets, and other financial subreddits
+                                    </small>
+                                    
+                                    <div class="sentiment-explanation">
+                                        <h6><i class="fas fa-info-circle"></i> How Sentiment Affects Predictions</h6>
+                                        <div class="sentiment-details">
+                                            <p><strong>Sentiment Analysis</strong> examines the emotional tone in Reddit discussions about your stock:</p>
+                                            <ul>
+                                                <li><span class="sentiment-value positive">Positive (+0.1 to +1.0)</span>: Bullish discussions, optimistic outlook</li>
+                                                <li><span class="sentiment-value neutral">Neutral (-0.1 to +0.1)</span>: Factual, balanced discussions</li>
+                                                <li><span class="sentiment-value negative">Negative (-1.0 to -0.1)</span>: Bearish discussions, pessimistic outlook</li>
+                                            </ul>
+                                            <p><strong>Impact on Predictions:</strong> The ML model uses sentiment as a feature alongside technical indicators. Positive sentiment may suggest upward price movement, while negative sentiment could indicate potential declines.</p>
+                                            <p><em>Note: Sentiment is one of many factors. Always conduct your own research before making investment decisions.</em></p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
